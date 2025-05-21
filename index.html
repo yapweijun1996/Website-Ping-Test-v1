@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Ping Test Compare with YouTube (Improved Expandable Errors)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 15px;
+      background: #f4f6f8;
+      border-radius: 8px;
+      text-align: center;
+      color: #333;
+    }
+    input[type="text"] {
+      width: 100%;
+      max-width: 600px;
+      padding: 12px 15px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      margin-bottom: 20px;
+      box-sizing: border-box;
+      transition: border-color 0.3s ease;
+    }
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #0078d7;
+      box-shadow: 0 0 5px #0078d7aa;
+    }
+    button {
+      background-color: #0078d7;
+      color: white;
+      border: none;
+      padding: 14px 32px;
+      font-size: 18px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      max-width: 600px;
+      width: 100%;
+      box-sizing: border-box;
+      justify-content: center;
+      margin: 0 auto 20px;
+    }
+    button:disabled {
+      background-color: #a0c4ff;
+      cursor: not-allowed;
+    }
+    button:hover:not(:disabled) {
+      background-color: #005a9e;
+    }
+    #status {
+      margin-top: 20px;
+      font-size: 18px;
+      min-height: 28px;
+      word-break: break-word;
+      color: #444;
+      font-weight: 600;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    table {
+      margin: 15px auto 20px;
+      border-collapse: collapse;
+      width: 100%;
+      max-width: 900px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-radius: 6px;
+      overflow: hidden;
+      font-size: 14px;
+    }
+    th, td {
+      border-bottom: 1px solid #ddd;
+      padding: 10px 8px;
+      text-align: center;
+      word-break: break-word;
+      vertical-align: middle;
+      position: relative;
+    }
+    th {
+      background-color: #0078d7;
+      color: white;
+      font-weight: 700;
+    }
+    tbody tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+    tbody tr.failed {
+      color: #d9534f;
+      font-weight: 600;
+    }
+    tbody tr.success {
+      color: #28a745;
+      font-weight: 600;
+    }
+    tfoot tr {
+      background-color: #e6f0ff;
+      font-weight: 700;
+      font-size: 16px;
+    }
+    caption {
+      font-weight: 700;
+      margin-bottom: 12px;
+      font-size: 18px;
+      color: #005a9e;
+      word-break: break-word;
+    }
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #0078d7;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg);}
+      100% { transform: rotate(360deg);}
+    }
+    .error-toggle-btn {
+      background: #0078d7;
+      border: none;
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+      box-shadow: 0 0 6px #005a9eaa;
+      transition: background-color 0.3s ease;
+      position: relative;
+      z-index: 10;
+      user-select: none;
+    }
+    .error-toggle-btn:hover,
+    .error-toggle-btn[aria-expanded="true"] {
+      background-color: #005a9e;
+      box-shadow: 0 0 12px #003f6ecc;
+    }
+    .error-popup {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fff;
+      color: #c00;
+      border: 1px solid #c00;
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-size: 13px;
+      max-width: 320px;
+      box-shadow: 0 6px 12px rgba(255, 0, 0, 0.2);
+      white-space: pre-line;
+      text-align: left;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      z-index: 100;
+      margin-bottom: 8px;
+    }
+    .error-popup::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -6px;
+      border-width: 6px;
+      border-style: solid;
+      border-color: #c00 transparent transparent transparent;
+    }
+    .error-popup.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .round-header {
+      margin-top: 30px;
+      font-weight: 700;
+      font-size: 22px;
+      color: #005a9e;
+      text-align: left;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .comparison {
+      font-weight: 700;
+      margin-bottom: 30px;
+      font-size: 20px;
+      color: #005a9e;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>Ping Test Compare with YouTube (3 Rounds, Row by Row, Better Error UI)</h1>
+  <input type="text" id="urlInput" placeholder="Enter website URL (e.g. demo1.globe3cloud.com)" autocomplete="off" />
+  <br />
+  <button id="pingBtn" aria-live="polite" aria-busy="false">Start Ping Test</button>
+  <div id="status" role="status" aria-live="polite"></div>
+  <div id="results"></div>
+  <div id="overallComparison" class="comparison"></div>
+
+<script>
+  const btn = document.getElementById('pingBtn');
+  const status = document.getElementById('status');
+  const urlInput = document.getElementById('urlInput');
+  const resultsDiv = document.getElementById('results');
+  const overallComparison = document.getElementById('overallComparison');
+
+  // Close any open error popups
+  function closeAllPopups() {
+    document.querySelectorAll('.error-popup.show').forEach(popup => {
+      popup.classList.remove('show');
+      const btn = popup.previousElementSibling;
+      if (btn) btn.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  // Toggle error popup visibility on button click
+  function toggleErrorPopup(btn) {
+    const popup = btn.nextElementSibling;
+    const isShown = popup.classList.contains('show');
+    closeAllPopups();
+    if (!isShown) {
+      popup.classList.add('show');
+      btn.setAttribute('aria-expanded', 'true');
+    } else {
+      popup.classList.remove('show');
+      btn.setAttribute('aria-expanded', 'false');
+    }
+  }
+
+  // Close popups if clicking outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.classList.contains('error-toggle-btn')) {
+      closeAllPopups();
+    }
+  });
+
+  function pingResource(path) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const start = performance.now();
+
+      img.onload = () => {
+        const duration = performance.now() - start;
+        resolve({ success: true, duration });
+      };
+
+      img.onerror = () => {
+        const errorInfo = `
+- Resource not found (404)
+- Cross-Origin Request blocked by CORS policy
+- Network or firewall blocking the request
+- Server down or unreachable
+        `.trim();
+        reject({ success: false, errorInfo });
+      };
+
+      img.src = path + '?' + new Date().getTime();
+    });
+  }
+
+  async function pingOnce(baseUrl) {
+    try {
+      return await pingResource(baseUrl + '/favicon.ico');
+    } catch {
+      try {
+        return await pingResource(baseUrl + '/');
+      } catch (err) {
+        throw err;
+      }
+    }
+  }
+
+  function createTable(captionText) {
+    const table = document.createElement('table');
+    table.innerHTML = `
+      <caption>${captionText}</caption>
+      <thead>
+        <tr>
+          <th>Attempt</th>
+          <th>Target Ping Time</th>
+          <th>YouTube Ping Time</th>
+          <th>Comparison</th>
+          <th>Error Details (Target)</th>
+          <th>Error Details (YouTube)</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    `;
+    resultsDiv.appendChild(table);
+    return table.querySelector('tbody');
+  }
+
+  function compareTimes(targetTime, ytTime) {
+    if (targetTime === null && ytTime === null) return 'Both Failed';
+    if (targetTime === null) return 'Target Failed';
+    if (ytTime === null) return 'YouTube Failed';
+
+    if (targetTime < ytTime) return 'Target FASTER';
+    if (targetTime > ytTime) return 'Target SLOWER';
+    return 'Similar';
+  }
+
+  function formatTime(t) {
+    if (t === null) return 'Failed';
+    return t.toFixed(2) + ' ms';
+  }
+
+  function createErrorBtnAndPopup(attempt, error, type) {
+    if (!error) return '';
+    const id = `err-${type}-${attempt}-${Math.random().toString(36).substr(2, 6)}`;
+    return `
+      <div style="position:relative; display:inline-block;">
+        <button aria-expanded="false" aria-controls="${id}" class="error-toggle-btn" type="button" onclick="toggleErrorPopup(this)">ℹ️</button>
+        <div id="${id}" class="error-popup" role="alert" aria-live="polite" style="display:none;">
+          ${error}
+        </div>
+      </div>
+    `;
+  }
+
+  function addRow(tbody, attempt, targetTime, ytTime, targetErr, ytErr) {
+    const tr = document.createElement('tr');
+    const comparison = compareTimes(targetTime, ytTime);
+
+    tr.className = (comparison === 'Target FASTER') ? 'success' :
+                   (comparison === 'Target SLOWER') ? 'failed' : '';
+
+    tr.innerHTML = `
+      <td>${attempt}</td>
+      <td>${formatTime(targetTime)}</td>
+      <td>${formatTime(ytTime)}</td>
+      <td>${comparison}</td>
+      <td>${createErrorBtnAndPopup(attempt, targetErr, 'target')}</td>
+      <td>${createErrorBtnAndPopup(attempt, ytErr, 'yt')}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+
+  function addAverageRow(table, targetAvg, ytAvg) {
+    const tfoot = document.createElement('tfoot');
+    tfoot.innerHTML = `
+      <tr>
+        <td>Average</td>
+        <td>${targetAvg !== null ? targetAvg.toFixed(2) + ' ms' : 'N/A'}</td>
+        <td>${ytAvg !== null ? ytAvg.toFixed(2) + ' ms' : 'N/A'}</td>
+        <td colspan="3"></td>
+      </tr>
+    `;
+    table.appendChild(tfoot);
+  }
+
+  function overallComparisonText(targetAvg, ytAvg) {
+    if (targetAvg === null || ytAvg === null) return 'No valid overall data to compare.';
+    if (targetAvg < ytAvg) return `Overall: Target ${targetAvg.toFixed(2)} ms is FASTER than YouTube ${ytAvg.toFixed(2)} ms.`;
+    if (targetAvg > ytAvg) return `Overall: Target ${targetAvg.toFixed(2)} ms is SLOWER than YouTube ${ytAvg.toFixed(2)} ms.`;
+    return `Overall: Target and YouTube have SIMILAR speed (${targetAvg.toFixed(2)} ms).`;
+  }
+
+  btn.addEventListener('click', async () => {
+    let url = urlInput.value.trim();
+    if (!url) {
+      status.textContent = '❌ Please enter a valid URL.';
+      return;
+    }
+    if (!/^https?:\/\//i.test(url)) {
+      url = 'https://' + url;
+    }
+    const baseUrl = url.split('?')[0].replace(/\/$/, '');
+    const ytUrl = 'https://youtube.com';
+
+    status.innerHTML = `Starting 3 rounds of ping test for <strong>${baseUrl}</strong> compared with YouTube.com... <span class="spinner" aria-hidden="true"></span>`;
+    resultsDiv.innerHTML = '';
+    overallComparison.textContent = '';
+    btn.disabled = true;
+    btn.setAttribute('aria-busy', 'true');
+
+    const rounds = 3;
+    const attemptsPerRound = 10;
+
+    // Store all pings to calculate overall averages
+    const allTargetTimes = [];
+    const allYtTimes = [];
+
+    for (let round = 1; round <= rounds; round++) {
+      const caption = `Round ${round}: Ping Results Comparison`;
+      const tbody = createTable(caption);
+
+      const targetTimes = [];
+      const ytTimes = [];
+      const targetErrors = [];
+      const ytErrors = [];
+
+      for (let i = 1; i <= attemptsPerRound; i++) {
+        status.textContent = `Round ${round}: Ping ${i} of ${attemptsPerRound} (Target)...`;
+        try {
+          const res = await pingOnce(baseUrl);
+          targetTimes.push(res.duration);
+          targetErrors.push('');
+        } catch (error) {
+          targetTimes.push(null);
+          targetErrors.push(error.errorInfo || 'Unknown error');
+        }
+      }
+
+      for (let i = 1; i <= attemptsPerRound; i++) {
+        status.textContent = `Round ${round}: Ping ${i} of ${attemptsPerRound} (YouTube)...`;
+        try {
+          const res = await pingOnce(ytUrl);
+          ytTimes.push(res.duration);
+          ytErrors.push('');
+        } catch (error) {
+          ytTimes.push(null);
+          ytErrors.push(error.errorInfo || 'Unknown error');
+        }
+      }
+
+      // Add rows with side-by-side comparison
+      for (let i = 0; i < attemptsPerRound; i++) {
+        addRow(
+          tbody,
+          i + 1,
+          targetTimes[i],
+          ytTimes[i],
+          targetErrors[i],
+          ytErrors[i]
+        );
+      }
+
+      // Calculate averages ignoring nulls
+      const validTarget = targetTimes.filter(t => t !== null);
+      const validYT = ytTimes.filter(t => t !== null);
+
+      const targetAvg = validTarget.length
+        ? validTarget.reduce((a, b) => a + b, 0) / validTarget.length
+        : null;
+      const ytAvg = validYT.length
+        ? validYT.reduce((a, b) => a + b, 0) / validYT.length
+        : null;
+
+      addAverageRow(tbody.parentNode, targetAvg, ytAvg);
+
+      allTargetTimes.push(...validTarget);
+      allYtTimes.push(...validYT);
+    }
+
+    // Overall averages
+    const overallTargetAvg = allTargetTimes.length
+      ? allTargetTimes.reduce((a, b) => a + b, 0) / allTargetTimes.length
+      : null;
+
+    const overallYTAvg = allYtTimes.length
+      ? allYtTimes.reduce((a, b) => a + b, 0) / allYtTimes.length
+      : null;
+
+    overallComparison.textContent = overallComparisonText(overallTargetAvg, overallYTAvg);
+
+    status.textContent = '🎉 All rounds completed!';
+    btn.disabled = false;
+    btn.setAttribute('aria-busy', 'false');
+  });
+</script>
+</body>
+</html>
