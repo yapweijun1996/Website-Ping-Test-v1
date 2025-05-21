@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Ping Test Compare with YouTube (Improved Expandable Errors)</title>
+  <title>Ping Test Compare with YouTube (Improved Expandable Errors, Fixed Popup)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <style>
     body {
@@ -137,7 +137,7 @@
       cursor: pointer;
       font-size: 16px;
       line-height: 1;
-      padding: 3px 8px;
+      padding: 0px;
       border-radius: 4px;
       font-weight: 700;
       box-shadow: 0 0 6px #005a9eaa;
@@ -163,14 +163,22 @@
       padding: 10px 14px;
       font-size: 13px;
       max-width: 320px;
+      min-width: 200px; /* <-- added min-width */
       box-shadow: 0 6px 12px rgba(255, 0, 0, 0.2);
-      white-space: pre-line;
+      white-space: normal; /* <-- changed from pre-line */
+      word-wrap: break-word; /* <-- added */
       text-align: left;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.2s ease;
       z-index: 100;
       margin-bottom: 8px;
+      display: none;
+    }
+    .error-popup.show {
+      opacity: 1;
+      pointer-events: auto;
+      display: block;
     }
     .error-popup::after {
       content: "";
@@ -181,10 +189,6 @@
       border-width: 6px;
       border-style: solid;
       border-color: #c00 transparent transparent transparent;
-    }
-    .error-popup.show {
-      opacity: 1;
-      pointer-events: auto;
     }
     .round-header {
       margin-top: 30px;
@@ -209,7 +213,7 @@
   </style>
 </head>
 <body>
-  <h1>Ping Test Compare with YouTube (3 Rounds, Row by Row, Better Error UI)</h1>
+  <h1>Ping Test Compare with YouTube (Improved Expandable Errors, Fixed Popup)</h1>
   <input type="text" id="urlInput" placeholder="Enter website URL (e.g. demo1.globe3cloud.com)" autocomplete="off" />
   <br />
   <button id="pingBtn" aria-live="polite" aria-busy="false">Start Ping Test</button>
@@ -224,7 +228,6 @@
   const resultsDiv = document.getElementById('results');
   const overallComparison = document.getElementById('overallComparison');
 
-  // Close any open error popups
   function closeAllPopups() {
     document.querySelectorAll('.error-popup.show').forEach(popup => {
       popup.classList.remove('show');
@@ -233,7 +236,6 @@
     });
   }
 
-  // Toggle error popup visibility on button click
   function toggleErrorPopup(btn) {
     const popup = btn.nextElementSibling;
     const isShown = popup.classList.contains('show');
@@ -241,13 +243,18 @@
     if (!isShown) {
       popup.classList.add('show');
       btn.setAttribute('aria-expanded', 'true');
-    } else {
-      popup.classList.remove('show');
-      btn.setAttribute('aria-expanded', 'false');
     }
   }
 
-  // Close popups if clicking outside
+  resultsDiv.addEventListener('click', (e) => {
+    if (e.target.classList.contains('error-toggle-btn')) {
+      e.stopPropagation();
+      toggleErrorPopup(e.target);
+    } else {
+      closeAllPopups();
+    }
+  });
+
   document.addEventListener('click', (e) => {
     if (!e.target.classList.contains('error-toggle-btn')) {
       closeAllPopups();
@@ -330,8 +337,8 @@
     const id = `err-${type}-${attempt}-${Math.random().toString(36).substr(2, 6)}`;
     return `
       <div style="position:relative; display:inline-block;">
-        <button aria-expanded="false" aria-controls="${id}" class="error-toggle-btn" type="button" onclick="toggleErrorPopup(this)">ℹ️</button>
-        <div id="${id}" class="error-popup" role="alert" aria-live="polite" style="display:none;">
+        <button aria-expanded="false" aria-controls="${id}" class="error-toggle-btn" type="button">ℹ️</button>
+        <div id="${id}" class="error-popup" role="alert" aria-live="polite">
           ${error}
         </div>
       </div>
